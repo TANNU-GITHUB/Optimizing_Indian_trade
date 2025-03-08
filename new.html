@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="relative h-screen w-full overflow-hidden">
+  <!-- Three.js canvas for the neon globe -->
+  <canvas id="three-bg" class="absolute inset-0"></canvas>
+  
+  <!-- Overlay for animated typewriter text -->
+  <div class="relative z-10 flex flex-col items-center justify-center h-full">
+    <h1 id="typewriter" class="text-6xl font-extrabold black-3d-text"></h1>
+  </div>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Typed.js for typewriter effect -->
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+<script>
+  /****************************************
+   * 1) TYPED.JS: Animate the Text & Cursor
+   ****************************************/
+  document.addEventListener('DOMContentLoaded', function(){
+    var options = {
+      strings: ["Optimizing Indian Trade Network"],
+      typeSpeed: 80,       // Slower typing so the cursor moves visibly
+      backSpeed: 0,        // No backspacing
+      startDelay: 500,
+      loop: false,
+      showCursor: true,
+      cursorChar: '|',     // Slim cursor
+      autoInsertCss: true
+    };
+    new Typed("#typewriter", options);
+  });
+
+  /*******************************************************
+   * 2) THREE.JS: Create a Globe with Bright Blue Continents
+   *    and an Overlaid Bright Blue Wireframe
+   *******************************************************/
+  const canvas = document.getElementById('three-bg');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  // Black background so neon lines stand out
+  renderer.setClearColor(0x000000, 1);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  // Camera set so the sphere is clearly visible
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 200;
+
+  // Load a placeholder texture with black oceans & bright blue continents
+  // Replace this with your own image if you have a more accurate map
+  const textureLoader = new THREE.TextureLoader();
+  const earthTexture = textureLoader.load("https://i.imgur.com/mULGHTo.jpg"); 
+  // ^ This placeholder shows black oceans and bright blue landmasses
+
+  // Sphere geometry for the globe
+  const sphereGeometry = new THREE.SphereGeometry(80, 32, 32);
+
+  // Material for the globe fill (blue continents on black oceans)
+  const sphereMaterial = new THREE.MeshBasicMaterial({
+    map: earthTexture
+  });
+  const globeMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  scene.add(globeMesh);
+
+  // Create a bright blue wireframe overlay
+  const edgesGeometry = new THREE.EdgesGeometry(sphereGeometry);
+  const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff }); 
+  // ^ Adjust color if you want a slightly different shade of blue
+  const wireframeSphere = new THREE.LineSegments(edgesGeometry, wireframeMaterial);
+  scene.add(wireframeSphere);
+
+  // Slow rotation of the globe
+  function animate() {
+    requestAnimationFrame(animate);
+    globeMesh.rotation.y += 0.0008;      // Adjust speed to your liking
+    wireframeSphere.rotation.y += 0.0008; // Keep wireframe aligned
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Handle window resizing
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+</script>
+
+<!-- Custom CSS for black 3D text with silver outline and moving cursor -->
+<style>
+  .black-3d-text {
+    /* 
+      1) Black fill for the text.
+      2) Silver outline using -webkit-text-stroke (Chrome/WebKit).
+      3) Shadows to create a 3D metallic rim effect.
+    */
+    color: #000; /* black fill */
+    -webkit-text-stroke: 2px #bfbfbf; /* silver outline */
+    text-shadow:
+      0 1px 0 #f2f2f2,
+      0 2px 0 #e6e6e6,
+      0 3px 2px rgba(0, 0, 0, 0.5),
+      0 4px 4px rgba(0, 0, 0, 0.4);
+    transform: perspective(600px) translateZ(20px);
+  }
+
+  .typed-cursor {
+    font-size: 4rem;    /* Large enough to match text-6xl */
+    color: #bfbfbf;     /* Silver color for the cursor */
+    animation: blink 0.7s infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+</style>
+{% endblock %}
