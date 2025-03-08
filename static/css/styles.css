@@ -1,0 +1,5 @@
+/* Custom CSS overrides for 3D effects */
+.rotate-x-6 {
+    transform: perspective(600px) rotateX(6deg);
+  }
+  
