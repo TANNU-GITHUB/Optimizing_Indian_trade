@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="relative h-screen w-full overflow-hidden">
+  <!-- 1) Spline scene in the background (iframe) -->
+  <iframe 
+    src="https://my.spline.design/holographicearthwithdynamiclines-0ee04d597e47fc2785f660c44aa4d552/"
+    frameborder="0" 
+    class="absolute inset-0 w-full h-full z-0"
+  >
+  </iframe>
+  
+  <!-- 2) Overlay for animated typewriter text -->
+  <div class="relative z-10 flex flex-col items-center justify-center h-full">
+    <h1 id="typewriter" class="text-6xl font-extrabold black-3d-text"></h1>
+  </div>
+</div>
+
+<!-- Only Typed.js needed now (no Three.js) -->
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+<script>
+  /****************************************
+   * TYPED.JS: Animate the Text & Cursor
+   ****************************************/
+  document.addEventListener('DOMContentLoaded', function(){
+    var options = {
+      strings: ["Optimizing Indian Trade Network"],
+      typeSpeed: 90,       // Slower typing so the cursor moves visibly
+      backSpeed: 0,        // No backspacing
+      startDelay: 500,
+      loop: false,
+      showCursor: true,
+      cursorChar: '|',     // Slim cursor
+      autoInsertCss: true
+    };
+    new Typed("#typewriter", options);
+  });
+</script>
+
+<!-- Custom CSS for black 3D text with silver outline and blinking cursor -->
+<style>
+  .black-3d-text {
+    /* 
+      1) Black fill for the text.
+      2) Silver outline using -webkit-text-stroke (Chrome/WebKit).
+      3) Shadows to create a 3D metallic rim effect.
+    */
+    color: #000; /* black fill */
+    -webkit-text-stroke: 2px #bfbfbf; /* silver outline */
+    text-shadow:
+      0 1px 0 #f2f2f2,
+      0 2px 0 #e6e6e6,
+      0 3px 2px rgba(0, 0, 0, 0.5),
+      0 4px 4px rgba(0, 0, 0, 0.4);
+    transform: perspective(600px) translateZ(20px);
+  }
+
+  .typed-cursor {
+    font-size: 4rem;    /* Large enough to match text-6xl */
+    color: #bfbfbf;     /* Silver color for the cursor */
+    animation: blink 0.7s infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+</style>
+{% endblock %}
