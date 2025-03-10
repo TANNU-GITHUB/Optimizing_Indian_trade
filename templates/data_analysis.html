@@ -1,8 +1,122 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="p-8">
-  <h2 class="text-3xl font-bold text-[#39ff14] mb-4">Data Analysis</h2>
-  <p class="text-lg">This page will display data analysis and statistics for the trade network.</p>
-</div>
+<div class="container mx-auto p-6 text-white">
+    <h1 class="text-4xl font-bold mb-6 rotate-x-6 text-[#39ff14]">Data Analysis Dashboard</h1>
+
+    <!-- Basic Stats -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 text-[#39ff14]">Key Statistics</h2>
+        <p class="text-lg text-[#FFD700]">Average Transportation Cost: <span class="font-semibold">{{ stats.avg_cost | round(2) }} USD</span></p>
+        <p class="text-lg text-[#FFD700]">Average Distance: <span class="font-semibold">{{ stats.avg_distance | round(2) }} km</span></p>
+        <p class="text-lg text-[#FFD700]">Top Origins: <span class="font-semibold">{{ stats.top_origins }}</span></p>
+        <p class="text-lg text-[#FFD700]">Modes of Transport: <span class="font-semibold">{{ stats.modes }}</span></p>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="POST" class="mb-8 flex flex-wrap">
+        <select name="origin" class="p-3 m-2 bg-gray-800 text-white rounded-lg w-48">
+            <option value="">Select Origin</option>
+            {% for origin in unique_origins %}
+            <option value="{{ origin }}">{{ origin }}</option>
+            {% endfor %}
+        </select>
+        <select name="destination" class="p-3 m-2 bg-gray-800 text-white rounded-lg w-48">
+            <option value="">Select Destination</option>
+            {% for destination in unique_destinations %}
+            <option value="{{ destination }}">{{ destination }}</option>
+            {% endfor %}
+        </select>
+        <select name="criterion" class="p-3 m-2 bg-gray-800 text-white rounded-lg">
+            <option value="cost">Cost</option>
+            <option value="time">Time</option>
+            <option value="distance">Distance</option>
+        </select>
+        <button type="submit" class="p-3 m-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white font-semibold">Filter</button>
+    </form>
+
+    <!-- Filtered Routes -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 text-[#39ff14]">Filtered Routes</h2>
+        {% if filtered_routes %}
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-800"><th class="p-3">Origin</th><th class="p-3">Destination</th><th class="p-3">Distance (km)</th><th class="p-3">Cost (USD)</th></tr>
+            </thead>
+            <tbody>
+                {% for route in filtered_routes %}
+                <tr class="hover:bg-gray-700">
+                    <td class="p-3 text-[#FFD700]">{{ route['Origin'] }}</td>
+                    <td class="p-3 text-[#FFD700]">{{ route['Destination'] }}</td>
+                    <td class="p-3 text-[#FFD700]">{{ route['Distance (km)'] }}</td>
+                    <td class="p-3 text-[#FFD700]">{{ route['Transportation Cost (USD)'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-lg text-[#FFD700]">No routes found for the selected origin and destination.</p>
+        {% endif %}
+    </div>
+
+    <!-- Shortest Path -->
+    {% if path %}
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 text-[#39ff14]">Shortest Path from India</h2>
+        <p class="text-lg text-[#FFD700]">Path: <span class="font-semibold">{{ path }}</span></p>
+        <p class="text-lg text-[#FFD700]">{{ criterion|capitalize }}: <span class="font-semibold">{{ value }}</span></p>
+    </div>
+    {% endif %}
+
+    <!-- Correlation Analysis -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 rotate-x-6 text-[#39ff14]">Impact of Distance on Trade Volume</h2>
+        <p class="text-lg mb-4 text-[#FFD700]">{{ exp1 | safe }}</p>
+        {% if corr is not none %}
+        <p class="text-lg text-[#FFD700]">Correlation: <span class="font-semibold">{{ corr|round(3) }}</span> ({{ 'Strong' if corr|abs > 0.5 else 'Weak' }})</p>
+        <p class="text-lg text-[#FFD700]">P-value: <span class="font-semibold">{{ p_value|round(5) }}</span> ({{ 'Significant' if p_value < 0.05 else 'Not Significant' }})</p>
+        {% endif %}
+        <div class="plot-container">{{ fig1 | safe }}</div>
+    </div>
+
+    <!-- Average Cost Per Km -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 rotate-x-6 text-[#39ff14]">Average Trade Cost Per Unit Distance</h2>
+        <p class="text-lg mb-4 text-[#FFD700]">{{ exp2 | safe }}</p>
+        <div class="plot-container">{{ fig2 | safe }}</div>
+    </div>
+
+    <!-- Optimized Trade Routes -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 rotate-x-6 text-[#39ff14]">Optimizing Trade Routes for Maximum Profit</h2>
+        <p class="text-lg mb-4 text-[#FFD700]">{{ exp3 | safe }}</p>
+        {% if optimized_routes %}
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-800"><th class="p-3">Origin</th><th class="p-3">Destination</th><th class="p-3">Trade Volume (tons)</th></tr>
+            </thead>
+            <tbody>
+                {% for route in optimized_routes %}
+                <tr class="hover:bg-gray-700">
+                    <td class="p-3 text-[#FFD700]">{{ route['Origin'] }}</td>
+                    <td class="p-3 text-[#FFD700]">{{ route['Destination'] }}</td>
+                    <td class="p-3 text-[#FFD700]">{{ route['Trade_Volume'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+        <div class="plot-container">{{ fig3 | safe }}</div>
+    </div>
+
+    <style>
+        .plot-container {
+            margin: 20px 0;
+            width: 100%;
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #FFD700;
+        }
+    </style>
 {% endblock %}
