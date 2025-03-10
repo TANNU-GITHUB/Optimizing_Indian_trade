@@ -1,8 +1,115 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="p-8">
-  <h2 class="text-3xl font-bold text-[#39ff14] mb-4">World Map</h2>
-  <p class="text-lg">This page will show an interactive world map of the trade network.</p>
+<div class="container mx-auto p-6 text-white">
+    <h1 class="text-4xl font-bold mb-6 rotate-x-6 text-[#39ff14]">World Map Visualization</h1>
+
+    <!-- Introductory Explanation -->
+    <div class="mb-8">
+        <h2 class="text-2xl mb-4 rotate-x-6 text-[#39ff14]">Understanding Tariff Impacts on Trade</h2>
+        <p class="text-lg text-[#FFD700]">{{ exp4 | safe }}</p>
+    </div>
+
+    <!-- Route Selection Form -->
+    <div class="mb-6">
+        <h3 class="text-xl mb-3 text-[#39ff14]">Filter by Trade Route</h3>
+        <form method="POST" class="flex flex-wrap items-center">
+            <select name="route" class="p-3 m-2 bg-gray-800 text-white rounded-lg w-72 text-lg focus:ring-2 focus:ring-[#39ff14]">
+                <option value="">All Routes (Default)</option>
+                {% for route in routes %}
+                <option value="{{ route }}" {% if selected_route == route %}selected{% endif %}>{{ route }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="p-3 m-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white font-semibold transition duration-300">Highlight Route</button>
+        </form>
+        <p class="text-sm text-gray-400 mt-2">Tip: Select a route to highlight it, hover for detailed stats, or click for more info below.</p>
+    </div>
+
+    <!-- Map -->
+    <div class="plot-container" id="map-container">{{ fig4 | safe }}</div>
+
+    <!-- Route Details Section -->
+    <div class="mt-6 p-4 bg-gray-800 rounded-lg" id="route-details">
+        <h3 class="text-xl text-[#39ff14] mb-2">Route Details</h3>
+        <div id="details-content">
+            <p class="text-lg text-[#FFD700]" id="details-text">Click a route on the map to see its details here.</p>
+        </div>
+    </div>
 </div>
+
+<style>
+    .plot-container {
+        margin: 20px 0;
+        width: 100%;
+        background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(20, 20, 40, 0.9)); /* Starry gradient */
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), inset 0 0 10px rgba(255, 215, 0, 0.2); /* Glow effect */
+        border: 2px solid #FFD700;
+    }
+    #route-details {
+        transition: all 0.3s ease;
+    }
+    #route-details .route-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #39ff14;
+        margin-bottom: 0.5rem;
+    }
+    #route-details .route-info {
+        font-size: 1.125rem;
+        color: #FFD700;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const plot = document.getElementById('map-container').getElementsByClassName('plotly')[0];
+        const detailsDiv = document.getElementById('route-details');
+        const detailsContent = document.getElementById('details-content');
+
+        if (plot) {
+            Plotly.relayout(plot, {
+                'scene': {
+                    'aspectmode': 'manual',
+                    'aspectratio': {x: 1, y: 1, z: 0.5}
+                }
+            });
+
+            // Animate glowing effect for selected routes
+            const traces = plot.data;
+            traces.forEach((trace, i) => {
+                if (trace.customdata && trace.customdata[0]) { // Selected route
+                    Plotly.animate(plot, {
+                        data: [{ 'line.width': [6, 8, 6], 'opacity': [1, 0.8, 1] }],
+                        traces: [i],
+                        layout: {}
+                    }, {
+                        transition: { duration: 1000, easing: 'cubic-in-out' },
+                        frame: { duration: 1000, redraw: false },
+                        mode: 'immediate',
+                        loop: true
+                    });
+                }
+            });
+
+            // Handle click events to show route details
+            plot.on('plotly_click', function(data) {
+                const point = data.points[0];
+                if (point.customdata) {
+                    const [_, route, volume, cost, tariff] = point.customdata;
+                    detailsContent.innerHTML = `
+                        <div class="route-name">${route}</div>
+                        <div class="route-info">
+                            <b>Trade Volume:</b> ${volume} tons<br>
+                            <b>Transportation Cost:</b> $${cost} USD<br>
+                            <b>Tariff:</b> $${tariff} USD
+                        </div>
+                    `;
+                    detailsDiv.classList.add('shadow-lg'); // Add glow effect
+                    setTimeout(() => detailsDiv.classList.remove('shadow-lg'), 300); // Remove after animation
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
